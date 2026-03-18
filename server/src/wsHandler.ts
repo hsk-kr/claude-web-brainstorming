@@ -1,6 +1,6 @@
 import type { WebSocket } from "ws";
 import type { PtyManager } from "./ptyManager.js";
-import type { GeminiImageGenerator } from "./geminiApi.js";
+import type { ImageGenerator } from "./imageApi.js";
 import type { SessionManager } from "./sessionManager.js";
 import type { WSMessage } from "../../shared/types.js";
 
@@ -15,7 +15,7 @@ export class WSHandler {
 
   constructor(
     private pty: PtyManager,
-    private gemini: GeminiImageGenerator,
+    private imageGenerator: ImageGenerator,
     sessionManager?: SessionManager
   ) {
     this.sessionManager = sessionManager ?? null;
@@ -33,7 +33,10 @@ export class WSHandler {
 
       case "image.request":
         try {
-          const result = await this.gemini.generate(msg.payload.prompt);
+          const result = await this.imageGenerator.generate(
+            msg.payload.prompt,
+            (msg.payload.model as any) || undefined
+          );
           send(ws, { type: "image.ready", payload: result });
         } catch (err) {
           send(ws, {

@@ -4,13 +4,13 @@ import { WebSocketServer } from "ws";
 import path from "path";
 import { SessionManager } from "./sessionManager.js";
 import { PtyManager } from "./ptyManager.js";
-import { GeminiImageGenerator } from "./geminiApi.js";
+import { ImageGenerator } from "./imageApi.js";
 import { FileWatcher } from "./fileWatcher.js";
 import { WSHandler } from "./wsHandler.js";
 import { parseWSMessage } from "../../shared/types.js";
 
 const PORT = process.env.PORT || 3001;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const SESSION_NAME = "claude-brainstorm";
 
 async function main() {
@@ -30,14 +30,14 @@ async function main() {
   await sessionManager.launchClaudeCode();
 
   const ptyManager = new PtyManager(SESSION_NAME);
-  const gemini = new GeminiImageGenerator(GEMINI_API_KEY);
+  const imageGenerator = new ImageGenerator(OPENAI_API_KEY);
   const fileWatcher = new FileWatcher([
     path.resolve("./prototypes"),
     path.resolve("./generated-images"),
   ]);
   fileWatcher.start();
 
-  const wsHandler = new WSHandler(ptyManager, gemini, sessionManager);
+  const wsHandler = new WSHandler(ptyManager, imageGenerator, sessionManager);
 
   // Register PTY and file watcher callbacks ONCE at startup
   // Fan out to all connected WebSocket clients

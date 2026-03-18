@@ -2,7 +2,7 @@ export type WSMessage =
   | { type: "terminal.input"; payload: string }
   | { type: "terminal.output"; payload: string }
   | { type: "terminal.resize"; payload: { cols: number; rows: number } }
-  | { type: "image.request"; payload: { prompt: string } }
+  | { type: "image.request"; payload: { prompt: string; model?: string } }
   | { type: "image.ready"; payload: { url: string; path: string } }
   | { type: "image.error"; payload: { message: string } }
   | { type: "file.changed"; payload: { path: string; event: "add" | "change" } }

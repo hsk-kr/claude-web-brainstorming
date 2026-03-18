@@ -13,7 +13,7 @@ function createMockPty() {
   };
 }
 
-function createMockGemini() {
+function createMockImageGen() {
   return {
     generate: vi.fn().mockResolvedValue({ url: "/img/test.png", path: "/tmp/test.png" }),
   };
@@ -35,9 +35,9 @@ function createMockWs() {
 describe("WSHandler", () => {
   it("routes terminal.input to pty.write", () => {
     const pty = createMockPty();
-    const gemini = createMockGemini();
+    const imageGen = createMockImageGen();
     const ws = createMockWs();
-    const handler = new WSHandler(pty as any, gemini as any);
+    const handler = new WSHandler(pty as any, imageGen as any);
 
     const msg: WSMessage = { type: "terminal.input", payload: "hello" };
     handler.handle(ws as any, msg);
@@ -47,9 +47,9 @@ describe("WSHandler", () => {
 
   it("routes terminal.resize to pty.resize", () => {
     const pty = createMockPty();
-    const gemini = createMockGemini();
+    const imageGen = createMockImageGen();
     const ws = createMockWs();
-    const handler = new WSHandler(pty as any, gemini as any);
+    const handler = new WSHandler(pty as any, imageGen as any);
 
     const msg: WSMessage = { type: "terminal.resize", payload: { cols: 100, rows: 30 } };
     handler.handle(ws as any, msg);
@@ -57,27 +57,27 @@ describe("WSHandler", () => {
     expect(pty.resize).toHaveBeenCalledWith(100, 30);
   });
 
-  it("routes image.request to gemini and sends image.ready", async () => {
+  it("routes image.request to imageGen and sends image.ready", async () => {
     const pty = createMockPty();
-    const gemini = createMockGemini();
+    const imageGen = createMockImageGen();
     const ws = createMockWs();
-    const handler = new WSHandler(pty as any, gemini as any);
+    const handler = new WSHandler(pty as any, imageGen as any);
 
     const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat" } };
     await handler.handle(ws as any, msg);
 
-    expect(gemini.generate).toHaveBeenCalledWith("a cat");
+    expect(imageGen.generate).toHaveBeenCalledWith("a cat", undefined);
     expect(ws.send).toHaveBeenCalledWith(
       JSON.stringify({ type: "image.ready", payload: { url: "/img/test.png", path: "/tmp/test.png" } })
     );
   });
 
-  it("sends image.error on gemini failure", async () => {
+  it("sends image.error on imageGen failure", async () => {
     const pty = createMockPty();
-    const gemini = createMockGemini();
-    gemini.generate.mockRejectedValue(new Error("API down"));
+    const imageGen = createMockImageGen();
+    imageGen.generate.mockRejectedValue(new Error("API down"));
     const ws = createMockWs();
-    const handler = new WSHandler(pty as any, gemini as any);
+    const handler = new WSHandler(pty as any, imageGen as any);
 
     const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat" } };
     await handler.handle(ws as any, msg);
@@ -89,10 +89,10 @@ describe("WSHandler", () => {
 
   it("handles session.end by disposing pty and destroying session", async () => {
     const pty = createMockPty();
-    const gemini = createMockGemini();
+    const imageGen = createMockImageGen();
     const session = createMockSession();
     const ws = createMockWs();
-    const handler = new WSHandler(pty as any, gemini as any, session as any);
+    const handler = new WSHandler(pty as any, imageGen as any, session as any);
 
     const msg: WSMessage = { type: "session.end", payload: null };
     await handler.handle(ws as any, msg);
