@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 
-// Mock node-pty so tests don't require a live tmux session
+// Capture handlers so we can simulate PTY events
+let dataHandler: ((data: string) => void) | null = null;
+let exitHandler: ((event: { exitCode: number; signal?: number }) => void) | null = null;
+
 const mockPty = {
-  onData: vi.fn(),
-  onExit: vi.fn(),
+  onData: vi.fn((cb) => {
+    dataHandler = cb;
+    return { dispose: vi.fn() };
+  }),
+  onExit: vi.fn((cb) => {
+    exitHandler = cb;
+    return { dispose: vi.fn() };
+  }),
   write: vi.fn(),
   resize: vi.fn(),
   kill: vi.fn(),
@@ -21,6 +30,8 @@ describe("PtyManager", () => {
   afterEach(() => {
     manager?.dispose();
     vi.clearAllMocks();
+    dataHandler = null;
+    exitHandler = null;
   });
 
   it("spawns a PTY process attached to tmux", () => {
@@ -28,12 +39,30 @@ describe("PtyManager", () => {
     expect(manager.isAlive()).toBe(true);
   });
 
-  it("returns an unsubscribe function from onData", () => {
+  it("invokes data callbacks when PTY emits data", () => {
+    manager = new PtyManager("test-session");
+    const cb = vi.fn();
+    manager.onData(cb);
+    dataHandler!("hello");
+    expect(cb).toHaveBeenCalledWith("hello");
+  });
+
+  it("stops invoking callback after unsubscribe", () => {
     manager = new PtyManager("test-session");
     const cb = vi.fn();
     const unsub = manager.onData(cb);
-    expect(typeof unsub).toBe("function");
     unsub();
+    dataHandler!("hello");
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it("invokes exit callbacks when PTY exits", () => {
+    manager = new PtyManager("test-session");
+    const cb = vi.fn();
+    manager.onExit(cb);
+    exitHandler!({ exitCode: 0, signal: undefined });
+    expect(cb).toHaveBeenCalledWith(0, undefined);
+    expect(manager.isAlive()).toBe(false);
   });
 
   it("writes input to the PTY", () => {
@@ -53,5 +82,13 @@ describe("PtyManager", () => {
     manager.dispose();
     expect(manager.isAlive()).toBe(false);
     expect(mockPty.kill).toHaveBeenCalled();
+  });
+
+  it("handles write/resize gracefully after dispose", () => {
+    manager = new PtyManager("test-session");
+    manager.dispose();
+    // Should not throw
+    manager.write("test");
+    manager.resize(80, 24);
   });
 });
