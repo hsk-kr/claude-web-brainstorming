@@ -1,45 +1,60 @@
 # Claude Brainstorming Tool
 
-## Project Vision
+## Status: Initial Implementation Complete (2026-03-18)
 
-A web-based brainstorming and prototyping tool that wraps Claude Code CLI behind a friendly UI. Non-technical users can brainstorm ideas, generate images (via Gemini), and create prototypes — all powered by Claude Code running in the background.
+A web-based brainstorming and prototyping tool that wraps Claude Code CLI behind a friendly UI. Non-technical users can brainstorm ideas, generate images (via OpenAI), and create prototypes — all powered by Claude Code running in the background.
 
-## Status: Brainstorming Phase (2026-03-18)
+## Tech Stack
 
-Currently in the design/brainstorming phase. No code written yet.
+- **Client:** React 19, TypeScript, Vite 6, xterm.js, Tailwind CSS v4
+- **Server:** Node.js, Express 5, ws, node-pty, chokidar
+- **Image Generation:** OpenAI API — gpt-image-1 (cheapest), dall-e-2, dall-e-3 (user selects model in UI)
+- **Testing:** Vitest (unit), Playwright (e2e)
 
-## Core Concept
+## Architecture
 
-- **Web UI** → users interact through a browser-based interface
-- **Web Server** → manages Claude Code CLI sessions via tmux
-- **WebSocket** → real-time communication between client and server
-- **Claude Code CLI** → runs in tmux sessions, user confirms actions manually
-- **Image Generation** → uses Gemini for creating visuals from brainstormed ideas
-- **Prototyping** → generates working prototypes from ideas
-
-## Architecture (Proposed)
+Three-panel web UI: **Chat**, **Terminal** (xterm.js), **Preview**.
 
 ```
-Browser (Web Client)
+Browser (React + xterm.js + Tailwind)
     ↕ WebSocket
-Web Server (Node/Python)
-    ↕ tmux sessions
-Claude Code CLI instances
+Express Server (Node.js)
+    ↕ node-pty
+tmux session → Claude Code CLI
+    ↕
+OpenAI API (image generation)
 ```
 
-Key constraint: Claude Code requires manual confirmation from the user for certain actions. The UI must surface these confirmation prompts and let users approve/deny them.
-
-## Design Decisions Log
-
-- (pending) Architecture approach — brainstorming in progress
-- (pending) Tech stack selection
-- (pending) How to bridge tmux ↔ web server communication
-- (pending) Image generation integration (Gemini)
-
-## Conventions
-
-- (to be determined during design phase)
+Server manages a tmux session via node-pty. WebSocket provides real-time communication between client and server. chokidar watches prototype files for hot-reload in the Preview panel. Users must confirm Claude Code actions through the Terminal panel.
 
 ## Running the Project
 
-- (not yet applicable — no code written)
+```bash
+# 1. Set your OpenAI API key
+export OPENAI_API_KEY=your-key
+
+# 2. Ensure tmux is installed
+# macOS: brew install tmux
+
+# 3. Install dependencies
+npm install && cd server && npm install && cd ../client && npm install
+
+# 4. Start dev (server on :3001, client on :5173)
+npm run dev
+```
+
+## Testing
+
+```bash
+npm test          # Server unit tests (Vitest)
+npm run test:e2e  # End-to-end tests (Playwright)
+```
+
+## Conventions
+
+- TypeScript strict mode everywhere
+- ESM modules only (no CommonJS)
+- Vitest for all tests
+- Tailwind CSS v4 for styling
+- Server imports shared code via relative paths (`../shared/...`)
+- Client imports shared code via `@shared` alias
