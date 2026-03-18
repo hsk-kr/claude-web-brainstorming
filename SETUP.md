@@ -96,6 +96,13 @@ npm install -g @anthropic-ai/claude-code
 which claude  # should print a path
 ```
 
+### `posix_spawnp failed` error from node-pty
+The `spawn-helper` binary inside node-pty may be missing execute permission:
+```bash
+chmod +x node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper   # Apple Silicon
+chmod +x node_modules/node-pty/prebuilds/darwin-x64/spawn-helper     # Intel Mac
+```
+
 ### Port already in use
 ```bash
 # Kill whatever's on port 3001
