@@ -163,6 +163,7 @@ claude-brainstorming-tool/
 │   │   └── fileWatcher.ts
 │   └── package.json
 ├── prototypes/            # Generated prototypes live here
+├── generated-images/      # Gemini-generated images
 ├── docs/
 └── CLAUDE.md
 ```
