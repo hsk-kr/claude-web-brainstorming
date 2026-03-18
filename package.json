@@ -1,0 +1,15 @@
+{
+  "name": "claude-brainstorming-tool",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "test": "cd server && npm test",
+    "test:e2e": "cd client && npx playwright test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
