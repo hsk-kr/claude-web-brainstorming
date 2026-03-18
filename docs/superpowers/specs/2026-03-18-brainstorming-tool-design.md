@@ -50,6 +50,7 @@ Three-panel layout:
 2. Spawns `node-pty` attached to `tmux attach -t claude-session`
 3. PTY output is streamed to the browser via WebSocket
 4. Browser input (keystrokes or button clicks) is written back to the PTY
+5. On terminal resize, relay new dimensions to the PTY via `pty.resize(cols, rows)`
 
 ### Convenience buttons
 
@@ -79,15 +80,17 @@ The chat panel is a structured UI layer on top of Claude Code, not a separate AI
 - User types an idea or message in the chat panel
 - The message gets sent to Claude Code via the terminal PTY (injected as a prompt)
 - Claude Code's response appears in the terminal in real-time
-- The chat panel stores a clean history of user messages for easy reference
+- The chat panel stores user messages only — Claude Code's responses are viewed in the terminal panel. The chat panel is an input log + action launcher, not a mirrored conversation view. This avoids the complexity of parsing raw PTY output for AI responses.
 - Iterative: user goes back and forth refining ideas, then triggers image generation or prototype creation when ready
 
 ## Image Generation (Gemini)
 
+- **Model:** Gemini's Imagen 3 (`imagen-3.0-generate-001`) for image generation
 - **Trigger:** User clicks "Generate Image" on a message/idea in the chat panel
+- **Prompt:** The user's chat message is used as the base prompt. A prompt editor opens where the user can refine before sending to Gemini.
 - **Flow:** Browser -> Node.js server -> Gemini API -> image returned -> displayed in Preview Panel
 - Direct API call to Gemini (not through Claude Code) for speed
-- Generated images saved locally, shown in gallery in Preview Panel
+- Generated images saved locally to `generated-images/`, shown in gallery in Preview Panel
 - User can regenerate with tweaked prompts
 
 ## Prototype Preview
@@ -99,6 +102,25 @@ The chat panel is a structured UI layer on top of Claude Code, not a separate AI
 - Preview Panel loads the prototype in an iframe
 - Hot reload on file changes
 
+## WebSocket Protocol
+
+All messages use a typed envelope format:
+
+```typescript
+type WSMessage =
+  | { type: "terminal.input"; payload: string }       // client -> server: keystrokes
+  | { type: "terminal.output"; payload: string }      // server -> client: PTY data
+  | { type: "terminal.resize"; payload: { cols: number; rows: number } }
+  | { type: "image.request"; payload: { prompt: string } }
+  | { type: "image.ready"; payload: { url: string; path: string } }
+  | { type: "image.error"; payload: { message: string } }
+  | { type: "file.changed"; payload: { path: string; event: "add" | "change" } }
+  | { type: "session.status"; payload: { status: "running" | "stopped" | "error" } }
+  | { type: "error"; payload: { message: string } }
+```
+
+Single WebSocket connection — acceptable for local single-user use. Message types prevent interleaving ambiguity.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -109,9 +131,10 @@ The chat panel is a structured UI layer on top of Claude Code, not a separate AI
 | Server | Node.js + Express + TypeScript |
 | PTY | node-pty |
 | Terminal multiplexer | tmux |
-| Image generation | Gemini API |
+| Image generation | Gemini Imagen 3 API |
 | Styling | Tailwind CSS |
 | File watching | chokidar |
+| Testing | Vitest (unit/integration), Playwright (E2E) |
 
 ## Project Structure
 
@@ -126,7 +149,8 @@ claude-brainstorming-tool/
 │   │   │   └── ConvenienceButtons.tsx
 │   │   ├── hooks/
 │   │   │   ├── useWebSocket.ts
-│   │   │   └── useTerminal.ts
+│   │   │   ├── useTerminal.ts
+│   │   │   └── usePreview.ts
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   └── index.html
@@ -153,6 +177,6 @@ claude-brainstorming-tool/
 
 ## Testing Strategy
 
-- **Unit tests:** Session manager, PTY manager, Gemini API wrapper
-- **Integration tests:** WebSocket message flow, terminal input/output relay
-- **E2E tests:** Full flow — type in chat, see terminal output, generate image, preview prototype
+- **Unit tests (Vitest):** Session manager, PTY manager, Gemini API wrapper
+- **Integration tests (Vitest):** WebSocket message flow, terminal input/output relay
+- **E2E tests (Playwright):** Full flow — type in chat, see terminal output, generate image, preview prototype
