@@ -15,7 +15,8 @@ export class PtyManager {
 
   private spawn(): void {
     try {
-      this.ptyProcess = pty.spawn("tmux", ["attach", "-t", this.sessionName], {
+      // Use shell to resolve tmux path from user's PATH
+      this.ptyProcess = pty.spawn("/bin/zsh", ["-lc", `tmux attach -t ${this.sessionName}`], {
         name: "xterm-256color",
         cols: 120,
         rows: 40,
