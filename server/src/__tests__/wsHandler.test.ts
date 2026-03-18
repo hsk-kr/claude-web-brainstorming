@@ -63,10 +63,10 @@ describe("WSHandler", () => {
     const ws = createMockWs();
     const handler = new WSHandler(pty as any, imageGen as any);
 
-    const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat" } };
+    const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat", apiKey: "sk-test" } };
     await handler.handle(ws as any, msg);
 
-    expect(imageGen.generate).toHaveBeenCalledWith("a cat", undefined);
+    expect(imageGen.generate).toHaveBeenCalledWith("a cat", "sk-test", undefined);
     expect(ws.send).toHaveBeenCalledWith(
       JSON.stringify({ type: "image.ready", payload: { url: "/img/test.png", path: "/tmp/test.png" } })
     );
@@ -79,7 +79,7 @@ describe("WSHandler", () => {
     const ws = createMockWs();
     const handler = new WSHandler(pty as any, imageGen as any);
 
-    const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat" } };
+    const msg: WSMessage = { type: "image.request", payload: { prompt: "a cat", apiKey: "sk-test" } };
     await handler.handle(ws as any, msg);
 
     expect(ws.send).toHaveBeenCalledWith(

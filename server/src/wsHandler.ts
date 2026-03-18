@@ -35,6 +35,7 @@ export class WSHandler {
         try {
           const result = await this.imageGenerator.generate(
             msg.payload.prompt,
+            msg.payload.apiKey,
             (msg.payload.model as any) || undefined
           );
           send(ws, { type: "image.ready", payload: result });

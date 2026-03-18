@@ -12,26 +12,26 @@ export const AVAILABLE_MODELS = [
 export type ImageModel = (typeof AVAILABLE_MODELS)[number]["id"];
 
 export class ImageGenerator {
-  private client: OpenAI;
-
-  constructor(
-    apiKey: string,
-    private outputDir: string = "./generated-images"
-  ) {
-    this.client = new OpenAI({ apiKey });
-  }
+  constructor(private outputDir: string = "./generated-images") {}
 
   async generate(
     prompt: string,
+    apiKey: string,
     model: ImageModel = "gpt-image-1"
   ): Promise<{ url: string; path: string }> {
     if (!prompt.trim()) {
       throw new Error("Prompt cannot be empty");
     }
 
+    if (!apiKey.trim()) {
+      throw new Error("OpenAI API key is required. Set it in Settings.");
+    }
+
+    const client = new OpenAI({ apiKey });
+
     await fs.mkdir(this.outputDir, { recursive: true });
 
-    const response = await this.client.images.generate({
+    const response = await client.images.generate({
       model,
       prompt,
       n: 1,

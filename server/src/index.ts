@@ -10,7 +10,6 @@ import { WSHandler } from "./wsHandler.js";
 import { parseWSMessage } from "../../shared/types.js";
 
 const PORT = process.env.PORT || 3001;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const SESSION_NAME = "claude-brainstorm";
 
 async function main() {
@@ -30,7 +29,7 @@ async function main() {
   await sessionManager.launchClaudeCode();
 
   const ptyManager = new PtyManager(SESSION_NAME);
-  const imageGenerator = new ImageGenerator(OPENAI_API_KEY);
+  const imageGenerator = new ImageGenerator();
   const fileWatcher = new FileWatcher([
     path.resolve("./prototypes"),
     path.resolve("./generated-images"),

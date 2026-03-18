@@ -11,9 +11,10 @@ interface ChatMessage {
 
 interface ChatPanelProps {
   send: (msg: WSMessage) => void;
+  apiKey: string;
 }
 
-export function ChatPanel({ send }: ChatPanelProps) {
+export function ChatPanel({ send, apiKey }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [imageEditor, setImageEditor] = useState<{ prompt: string } | null>(null);
@@ -126,7 +127,7 @@ export function ChatPanel({ send }: ChatPanelProps) {
         <ImagePromptEditor
           initialPrompt={imageEditor.prompt}
           onSubmit={(prompt, model) => {
-            send({ type: "image.request", payload: { prompt, model } });
+            send({ type: "image.request", payload: { prompt, model, apiKey } });
             setImageEditor(null);
           }}
           onCancel={() => setImageEditor(null)}

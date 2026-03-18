@@ -40,10 +40,10 @@ describe("WebSocket Integration", () => {
 
     await handler.handle(mockWs as any, {
       type: "image.request",
-      payload: { prompt: "a modern todo app UI" },
+      payload: { prompt: "a modern todo app UI", apiKey: "sk-test" },
     });
 
-    expect(mockImageGen.generate).toHaveBeenCalledWith("a modern todo app UI", undefined);
+    expect(mockImageGen.generate).toHaveBeenCalledWith("a modern todo app UI", "sk-test", undefined);
     expect(mockWs.send).toHaveBeenCalledWith(
       JSON.stringify({ type: "image.ready", payload: { url: "/img/1.png", path: "/tmp/1.png" } })
     );
@@ -54,10 +54,10 @@ describe("WebSocket Integration", () => {
 
     await handler.handle(mockWs as any, {
       type: "image.request",
-      payload: { prompt: "a cat", model: "dall-e-3" },
+      payload: { prompt: "a cat", model: "dall-e-3", apiKey: "sk-test" },
     });
 
-    expect(mockImageGen.generate).toHaveBeenCalledWith("a cat", "dall-e-3");
+    expect(mockImageGen.generate).toHaveBeenCalledWith("a cat", "sk-test", "dall-e-3");
   });
 
   it("full flow: resize -> pty resize", async () => {

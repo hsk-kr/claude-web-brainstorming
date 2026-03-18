@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { usePreview } from "./hooks/usePreview";
 import { ChatPanel } from "./components/ChatPanel";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { PreviewPanel } from "./components/PreviewPanel";
+import { SettingsPanel, useSettings } from "./components/SettingsPanel";
 
 const WS_URL = `ws://${window.location.host}/ws`;
 
 export default function App() {
   const { send, addHandler, connected } = useWebSocket(WS_URL);
   const { prototypeUrl, images, refreshKey, refreshPreview } = usePreview({ addHandler });
+  const { settings, updateSettings } = useSettings();
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-gray-950 text-white">
@@ -16,6 +20,12 @@ export default function App() {
       <div className="h-8 flex items-center px-4 bg-gray-900 border-b border-gray-800 text-xs">
         <span className="font-semibold text-gray-300">Claude Brainstorm</span>
         <span className="ml-auto flex items-center gap-3">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            Settings
+          </button>
           <button
             onClick={() => {
               if (confirm("End the Claude Code session?")) {
@@ -40,7 +50,7 @@ export default function App() {
       {/* Three-panel layout */}
       <div className="flex-1 flex min-h-0">
         <div className="w-80 flex-shrink-0 border-r border-gray-800">
-          <ChatPanel send={send} />
+          <ChatPanel send={send} apiKey={settings.openaiApiKey} />
         </div>
         <div className="flex-1 min-w-0">
           <TerminalPanel send={send} addHandler={addHandler} />
@@ -54,6 +64,15 @@ export default function App() {
           />
         </div>
       </div>
+
+      {/* Settings modal */}
+      {showSettings && (
+        <SettingsPanel
+          settings={settings}
+          onUpdate={updateSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

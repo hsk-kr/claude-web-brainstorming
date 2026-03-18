@@ -30,17 +30,17 @@ Server manages a tmux session via node-pty. WebSocket provides real-time communi
 ## Running the Project
 
 ```bash
-# 1. Set your OpenAI API key
-export OPENAI_API_KEY=your-key
-
-# 2. Ensure tmux is installed
+# 1. Ensure tmux is installed
 # macOS: brew install tmux
 
-# 3. Install dependencies
+# 2. Install dependencies
 npm install && cd server && npm install && cd ../client && npm install
 
-# 4. Start dev (server on :3001, client on :5173)
+# 3. Start dev (server on :3001, client on :5173)
 npm run dev
+
+# 4. Set your OpenAI API key in Settings (gear icon in the status bar)
+#    Key is stored in localStorage — never touches the server
 ```
 
 ## Testing

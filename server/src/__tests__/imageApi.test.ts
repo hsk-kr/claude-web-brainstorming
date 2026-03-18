@@ -22,8 +22,8 @@ global.fetch = vi.fn().mockResolvedValue({
 
 describe("ImageGenerator", () => {
   it("generates an image and saves to disk", async () => {
-    const generator = new ImageGenerator("fake-api-key", "/tmp/test-images");
-    const result = await generator.generate("a cat wearing a hat");
+    const generator = new ImageGenerator("/tmp/test-images");
+    const result = await generator.generate("a cat wearing a hat", "fake-api-key");
 
     expect(result).toHaveProperty("url");
     expect(result).toHaveProperty("path");
@@ -32,13 +32,18 @@ describe("ImageGenerator", () => {
   });
 
   it("throws on empty prompt", async () => {
-    const generator = new ImageGenerator("fake-api-key", "/tmp/test-images");
-    await expect(generator.generate("")).rejects.toThrow("Prompt cannot be empty");
+    const generator = new ImageGenerator("/tmp/test-images");
+    await expect(generator.generate("", "fake-key")).rejects.toThrow("Prompt cannot be empty");
+  });
+
+  it("throws on empty API key", async () => {
+    const generator = new ImageGenerator("/tmp/test-images");
+    await expect(generator.generate("a cat", "")).rejects.toThrow("OpenAI API key is required");
   });
 
   it("accepts a model parameter", async () => {
-    const generator = new ImageGenerator("fake-api-key", "/tmp/test-images");
-    const result = await generator.generate("a dog", "dall-e-3");
+    const generator = new ImageGenerator("/tmp/test-images");
+    const result = await generator.generate("a dog", "fake-key", "dall-e-3");
     expect(result).toHaveProperty("url");
   });
 
